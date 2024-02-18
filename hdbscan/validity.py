@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.metrics import pairwise_distances
+from sklearn.metrics import pairwise_distances, pairwise_distances_chunked
 from scipy.spatial.distance import cdist
 from ._hdbscan_linkage import mst_linkage_core
 from .hdbscan_ import isclose
