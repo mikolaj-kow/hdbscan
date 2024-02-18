@@ -4,6 +4,10 @@ from scipy.spatial.distance import cdist
 from ._hdbscan_linkage import mst_linkage_core
 from .hdbscan_ import isclose
 
+import joblib
+from ray.util.joblib import register_ray
+register_ray()
+
 def all_points_core_distance(distance_matrix, d=2.0):
     """
     Compute the all-points-core-distance for all the points of a cluster.
@@ -27,9 +31,10 @@ def all_points_core_distance(distance_matrix, d=2.0):
     Moulavi, D., Jaskowiak, P.A., Campello, R.J., Zimek, A. and Sander, J.,
     2014. Density-Based Clustering Validation. In SDM (pp. 839-847).
     """
-    distance_matrix[distance_matrix != 0] = (1.0 / distance_matrix[
-        distance_matrix != 0]) ** d
+    distance_matrix[distance_matrix != 0] = (1.0 / distance_matrix[distance_matrix != 0]) ** d
     result = distance_matrix.sum(axis=1)
+    print(distance_matrix.shape[0])
+    print(distance_matrix)
     result /= distance_matrix.shape[0] - 1
 
     if result.sum() == 0:
@@ -122,8 +127,9 @@ def distances_between_points(X, labels, cluster_id,
         distance_matrix = X[labels == cluster_id, :][:, labels == cluster_id]
     else:
         subset_X = X[labels == cluster_id, :]
-        distance_matrix = pairwise_distances(subset_X, metric=metric,
-                                             **kwd_args)
+        # distance_matrix = pairwise_distances(subset_X, metric=metric,**kwd_args)
+        with joblib.parallel_backend('ray'):
+            distance_matrix = pairwise_distances_chunked(subset_X, metric=metric, n_jobs=-1, **kwd_args)
         d = X.shape[1]
 
     if no_coredist:
@@ -273,7 +279,8 @@ def density_separation(X, labels, cluster_id1, cluster_id2,
     else:
         cluster1 = X[labels == cluster_id1][internal_nodes1]
         cluster2 = X[labels == cluster_id2][internal_nodes2]
-        distance_matrix = cdist(cluster1, cluster2, metric, **kwd_args)
+        with joblib.parallel_backend('ray'):
+            distance_matrix = cdist(cluster1, cluster2, metric, n_jobs=-1, **kwd_args)
 
     if no_coredist:
         return distance_matrix.min()
