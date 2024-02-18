@@ -280,7 +280,7 @@ def density_separation(X, labels, cluster_id1, cluster_id2,
         cluster1 = X[labels == cluster_id1][internal_nodes1]
         cluster2 = X[labels == cluster_id2][internal_nodes2]
         with joblib.parallel_backend('ray'):
-            distance_matrix = cdist(cluster1, cluster2, metric, n_jobs=-1, **kwd_args)
+            distance_matrix = cdist(cluster1, cluster2, metric, **kwd_args)
 
     if no_coredist:
         return distance_matrix.min()
