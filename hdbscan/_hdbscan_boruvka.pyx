@@ -64,6 +64,7 @@ printf("%f\n", "test")
 
 import logging
 logger = logging.getLogger("ray")
+logger = logging.getLogger(__name__)
 logger.handlers.clear()
 handler = logging.StreamHandler()
 handler.setLevel(logging.DEBUG)
@@ -76,7 +77,10 @@ loggerinfo.debug("test d")
 
 with gil:
     print("test gil")
+import sys
 
+sys.stdout.write("Hello out %s!" % name)
+sys.stderr.write("Hello err %s!" % name)
 import numpy as np
 cimport numpy as np
 
