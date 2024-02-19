@@ -7,7 +7,8 @@ HDBSCAN: Hierarchical Density-Based Spatial Clustering
 import numpy as np
 
 from sklearn.base import BaseEstimator, ClusterMixin
-from sklearn.metrics import pairwise_distances
+# from sklearn.metrics import pairwise_distances
+from sklearn.metrics import pairwise_distances, pairwise_distances_chunked
 from scipy.sparse import issparse
 from sklearn.neighbors import KDTree, BallTree
 from joblib import Memory

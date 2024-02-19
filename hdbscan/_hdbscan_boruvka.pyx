@@ -69,6 +69,9 @@ import hdbscan.dist_metrics as dist_metrics
 cimport hdbscan.dist_metrics as dist_metrics
 
 from joblib import Parallel, delayed
+import joblib
+from ray.util.joblib import register_ray
+register_ray()
 
 cdef np.double_t INF = np.inf
 
@@ -423,11 +426,18 @@ cdef class KDTreeBoruvkaAlgorithm (object):
                 else:
                     datasets.append(np.asarray(self.tree.data[i*split_cnt:(i+1)*split_cnt]))
 
-            knn_data = Parallel(n_jobs=self.n_jobs, max_nbytes=None)(
-                delayed(_core_dist_query)
-                (self.core_dist_tree, points,
-                 self.min_samples + 1)
-                for points in datasets)
+            print('kdtree_boruvka jobs=', self.n_jobs)
+            with joblib.parallel_backend('ray'):
+                knn_data = Parallel(n_jobs=self.n_jobs, max_nbytes=None, verbose=10)(
+                            delayed(_core_dist_query)
+                            (self.core_dist_tree, points,
+                             self.min_samples + 1)
+                            for points in datasets)
+            # knn_data = Parallel(n_jobs=self.n_jobs, max_nbytes=None)(
+            #     delayed(_core_dist_query)
+            #     (self.core_dist_tree, points,
+            #      self.min_samples + 1)
+            #     for points in datasets)
             knn_dist = np.vstack([x[0] for x in knn_data])
             knn_indices = np.vstack([x[1] for x in knn_data])
         else:
