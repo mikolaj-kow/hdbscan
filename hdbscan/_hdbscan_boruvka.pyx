@@ -73,14 +73,14 @@ logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
 logger.debug("test d")
-loggerinfo.debug("test d")
+logger.info("test d")
 
-with gil:
-    print("test gil")
+# with gil:
+print("test gil")
 import sys
 
-sys.stdout.write("Hello out %s!" % name)
-sys.stderr.write("Hello err %s!" % name)
+sys.stdout.write("Hello out %s!" % "")
+sys.stderr.write("Hello err %s!" % "")
 import numpy as np
 cimport numpy as np
 
