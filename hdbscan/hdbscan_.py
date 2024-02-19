@@ -1171,11 +1171,11 @@ class HDBSCAN(BaseEstimator, ClusterMixin):
         self : object
             Returns self
         """
-        logger.debug("Fit i", self)
-        logger.info("Fit d", self)
+        logger.debug(f"Fit d {self}")
+        logger.info(f"Fit i {self}")
         
-        loggerray.debug("ray Fit i", self)
-        loggerray.info("ray Fit d", self)
+        loggerray.debug(f"Fit r d {self}")
+        loggerray.info(f"Fit r i {self}")
         
         if self.metric != "precomputed":
             # Non-precomputed matrices may contain non-finite values.
