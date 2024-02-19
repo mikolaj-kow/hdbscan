@@ -57,6 +57,11 @@
 # we can perform more specific optimizations here for what
 # is a simpler version of the structure.
 
+from libc.stdio cimport printf
+
+printf("%f\n", "test")
+
+
 import logging
 logger = logging.getLogger("ray")
 logger.handlers.clear()
@@ -66,6 +71,11 @@ handler.setFormatter(logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s 
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
+logger.debug("test d")
+loggerinfo.debug("test d")
+
+with gil:
+    print("test gil")
 
 import numpy as np
 cimport numpy as np

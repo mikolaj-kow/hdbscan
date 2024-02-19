@@ -38,8 +38,8 @@ def all_points_core_distance(distance_matrix, d=2.0):
     distance_matrix = np.asarray(distance_matrix, dtype=np.longdouble)
     distance_matrix[distance_matrix != 0] = (1.0 / distance_matrix[distance_matrix != 0]) ** d
     result = distance_matrix.sum(axis=1)
-    logger.debug(distance_matrix.shape[0])
-    logger.debug(distance_matrix)
+    # logger.debug(distance_matrix.shape[0])
+    # logger.debug(distance_matrix)
     result /= distance_matrix.shape[0] - 1
 
     if result.sum() == 0:

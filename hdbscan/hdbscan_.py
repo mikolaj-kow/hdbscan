@@ -356,6 +356,7 @@ def _hdbscan_boruvka_kdtree(
         n_jobs=core_dist_n_jobs,
         **kwargs
     )
+    logger.info(f"Boruvka_kdtree: {alg}")
     min_spanning_tree = alg.spanning_tree()
     # Sort edges of the min_spanning_tree by weight
     row_order = np.argsort(min_spanning_tree.T[2])
@@ -400,6 +401,7 @@ def _hdbscan_boruvka_balltree(
         n_jobs=core_dist_n_jobs,
         **kwargs
     )
+    logger.info(f"Boruvka_balltree: {alg}")
     min_spanning_tree = alg.spanning_tree()
     # Sort edges of the min_spanning_tree by weight
     min_spanning_tree = min_spanning_tree[np.argsort(min_spanning_tree.T[2]), :]
@@ -779,6 +781,7 @@ def hdbscan(
                 _hdbscan_prims_balltree
             )(X, min_samples, alpha, metric, p, leaf_size, gen_min_span_tree, **kwargs)
         elif algorithm == "boruvka_kdtree":
+            logger.info("algorithm == boruvka_kdtree")
             if metric not in BALLTREE_VALID_METRICS:
                 raise ValueError("Cannot use Boruvka with KDTree for this" " metric!")
             (single_linkage_tree, result_min_span_tree) = memory.cache(
