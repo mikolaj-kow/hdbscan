@@ -4,7 +4,14 @@ HDBSCAN: Hierarchical Density-Based Spatial Clustering
          of Applications with Noise
 """
 import logging
-logger = logging.getLogger("ray")
+# logger = logging.getLogger("ray")
+logger = logging.getLogger(__name__)
+logger.handlers.clear()
+handler = logging.StreamHandler()
+handler.setLevel(logging.DEBUG)
+handler.setFormatter(logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s'))
+logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
 import numpy as np
 
 from sklearn.base import BaseEstimator, ClusterMixin
