@@ -91,11 +91,11 @@ from sklearn.neighbors import KDTree, BallTree
 import hdbscan.dist_metrics as dist_metrics
 cimport hdbscan.dist_metrics as dist_metrics
 
-from joblib import Parallel, delayed
+
 import joblib
 from ray.util.joblib import register_ray
 register_ray()
-
+from joblib import Parallel, delayed
 cdef np.double_t INF = np.inf
 
 
@@ -429,7 +429,7 @@ cdef class KDTreeBoruvkaAlgorithm (object):
         self.core_distance_ptr = <np.double_t *> &self.core_distance[0]
         self.bounds_ptr = <np.double_t *> &self.bounds[0]
         self.logger = logging.getLogger(__name__)
-        self.logger.info('kdtree_boruvka init jobs=', self.n_jobs)
+        self.logger.info(f'kdtree_boruvka init jobs={self.n_jobs}')
 
     cdef _compute_bounds(self):
         """Initialize core distances"""
@@ -453,7 +453,7 @@ cdef class KDTreeBoruvkaAlgorithm (object):
                 else:
                     datasets.append(np.asarray(self.tree.data[i*split_cnt:(i+1)*split_cnt]))
 
-            self.logger.info('kdtree_boruvka jobs=', self.n_jobs)
+            self.logger.info(f'kdtree_boruvka  jobs={self.n_jobs}')
             with joblib.parallel_backend('ray'):
                 knn_data = Parallel(n_jobs=self.n_jobs, max_nbytes=None, verbose=10)(
                             delayed(_core_dist_query)
