@@ -4,15 +4,15 @@ HDBSCAN: Hierarchical Density-Based Spatial Clustering
          of Applications with Noise
 """
 import logging
-
-loggerray = logging.getLogger("ray")
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("ray")
+# logger = logging.getLogger(__name__)
 logger.handlers.clear()
 handler = logging.StreamHandler()
 handler.setLevel(logging.DEBUG)
 handler.setFormatter(logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s'))
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
+
 import numpy as np
 
 from sklearn.base import BaseEstimator, ClusterMixin
@@ -1171,11 +1171,10 @@ class HDBSCAN(BaseEstimator, ClusterMixin):
         self : object
             Returns self
         """
-        logger.debug(f"Fit d {self}")
-        logger.info(f"Fit i {self}")
+
+        logger.info(f"Fit event by {self}")
         
-        loggerray.debug(f"Fit r d {self}")
-        loggerray.info(f"Fit r i {self}")
+
         
         if self.metric != "precomputed":
             # Non-precomputed matrices may contain non-finite values.

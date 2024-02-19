@@ -57,6 +57,16 @@
 # we can perform more specific optimizations here for what
 # is a simpler version of the structure.
 
+import logging
+logger = logging.getLogger("ray")
+logger.handlers.clear()
+handler = logging.StreamHandler()
+handler.setLevel(logging.DEBUG)
+handler.setFormatter(logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s'))
+logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
+
+
 import numpy as np
 cimport numpy as np
 
@@ -426,7 +436,7 @@ cdef class KDTreeBoruvkaAlgorithm (object):
                 else:
                     datasets.append(np.asarray(self.tree.data[i*split_cnt:(i+1)*split_cnt]))
 
-            print('kdtree_boruvka jobs=', self.n_jobs)
+            logger.info('kdtree_boruvka jobs=', self.n_jobs)
             with joblib.parallel_backend('ray'):
                 knn_data = Parallel(n_jobs=self.n_jobs, max_nbytes=None, verbose=10)(
                             delayed(_core_dist_query)

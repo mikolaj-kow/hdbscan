@@ -8,6 +8,10 @@ from .hdbscan_ import isclose
 # from ray.util.joblib import register_ray
 # register_ray()
 
+import logging
+logger = logging.getLogger("ray")
+# logger = logging.getLogger(__name__)
+
 def all_points_core_distance(distance_matrix, d=2.0):
     """
     Compute the all-points-core-distance for all the points of a cluster.
@@ -34,8 +38,8 @@ def all_points_core_distance(distance_matrix, d=2.0):
     distance_matrix = np.asarray(distance_matrix, dtype=np.longdouble)
     distance_matrix[distance_matrix != 0] = (1.0 / distance_matrix[distance_matrix != 0]) ** d
     result = distance_matrix.sum(axis=1)
-    print(distance_matrix.shape[0])
-    print(distance_matrix)
+    logger.debug(distance_matrix.shape[0])
+    logger.debug(distance_matrix)
     result /= distance_matrix.shape[0] - 1
 
     if result.sum() == 0:
@@ -49,7 +53,7 @@ def all_points_core_distance(distance_matrix, d=2.0):
                 with np.errstate(divide='raise'):
                     result **= (-1.0 / d)
             except FloatingPointError as w:
-                print(w, (-1.0 / d), result)
+                logger.error(w, (-1.0 / d), result)
 
     return result
 
@@ -143,7 +147,7 @@ def distances_between_points(X, labels, cluster_id,
             [distance_matrix, core_dist_matrix, core_dist_matrix.T])
 
         if print_max_raw_to_coredist_ratio:
-            print("Max raw distance to coredistance ratio: " + str(max_ratio(stacked_distances)))
+            logger.debug("Max raw distance to coredistance ratio: " + str(max_ratio(stacked_distances)))
 
         return stacked_distances.max(axis=-1), core_distances
 
@@ -359,6 +363,25 @@ def validity_index(X, labels, metric='euclidean',
     Moulavi, D., Jaskowiak, P.A., Campello, R.J., Zimek, A. and Sander, J.,
     2014. Density-Based Clustering Validation. In SDM (pp. 839-847).
     """
+    
+    logger.handlers.clear()
+    
+    if verbose:
+        handler = logging.StreamHandler()
+        handler.setLevel(logging.DEBUG)
+        handler.setFormatter(logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s'))
+        logger.addHandler(handler)
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.handlers.clear()
+        handler = logging.StreamHandler()
+        handler.setLevel(logging.INFO)
+        handler.setFormatter(logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s'))
+        logger.addHandler(handler)
+        logger.setLevel(logging.INFO)
+
+
+    
     core_distances = {}
     density_sparseness = {}
     mst_nodes = {}
@@ -426,8 +449,8 @@ def validity_index(X, labels, metric='euclidean',
         )
 
         if verbose:
-            print("Minimum density separation: " + str(min_density_sep))
-            print("Density sparseness: " + str(density_sparseness[i]))
+            logger.debug("Minimum density separation: " + str(min_density_sep))
+            logger.debug("Density sparseness: " + str(density_sparseness[i]))
 
         cluster_size = np.sum(labels == i)
         result += (cluster_size / n_samples) * cluster_validity_indices[i]
