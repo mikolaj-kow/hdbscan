@@ -6,6 +6,8 @@ hdbscan/tests/*.pyd
 hdbscan/__pycache__/*
 dist/*
 *egg-info
+.ipynb_checkpoints/*
 notebooks/.ipynb_checkpoints/*
+hdbscan/.ipynb_checkpoints/*
 __pycache__/
 
