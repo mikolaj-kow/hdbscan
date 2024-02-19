@@ -356,6 +356,8 @@ cdef class KDTreeBoruvkaAlgorithm (object):
     cdef np.ndarray candidate_point_arr
     cdef np.ndarray candidate_neighbor_arr
     cdef np.ndarray candidate_distance_arr
+    
+    cdef object logger
 
     def __init__(self, tree, min_samples=5, metric='euclidean', leaf_size=20,
                  alpha=1.0, approx_min_span_tree=False, n_jobs=4, **kwargs):
