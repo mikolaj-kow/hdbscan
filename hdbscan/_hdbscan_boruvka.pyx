@@ -60,15 +60,15 @@
 
 
 
-import logging
-logger = logging.getLogger("ray")
-logger = logging.getLogger(__name__)
-logger.handlers.clear()
-handler = logging.StreamHandler()
-handler.setLevel(logging.DEBUG)
-handler.setFormatter(logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s'))
-logger.addHandler(handler)
-logger.setLevel(logging.DEBUG)
+# import logging
+# logger = logging.getLogger("ray")
+# logger = logging.getLogger(__name__)
+# logger.handlers.clear()
+# handler = logging.StreamHandler()
+# handler.setLevel(logging.DEBUG)
+# handler.setFormatter(logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s'))
+# logger.addHandler(handler)
+# logger.setLevel(logging.DEBUG)
 
 # logger.debug("test d")
 # logger.info("test d")
@@ -357,7 +357,7 @@ cdef class KDTreeBoruvkaAlgorithm (object):
     cdef np.ndarray candidate_neighbor_arr
     cdef np.ndarray candidate_distance_arr
     
-    cdef object logger
+    # cdef object logger
 
     def __init__(self, tree, min_samples=5, metric='euclidean', leaf_size=20,
                  alpha=1.0, approx_min_span_tree=False, n_jobs=4, **kwargs):
@@ -428,8 +428,8 @@ cdef class KDTreeBoruvkaAlgorithm (object):
         self.candidate_point_ptr = <np.intp_t *> &self.candidate_point[0]
         self.core_distance_ptr = <np.double_t *> &self.core_distance[0]
         self.bounds_ptr = <np.double_t *> &self.bounds[0]
-        self.logger = logging.getLogger(__name__)
-        self.logger.info(f'kdtree_boruvka init jobs={self.n_jobs}')
+        # self.logger = logging.getLogger(__name__)
+        # self.logger.info(f'kdtree_boruvka init jobs={self.n_jobs}')
 
     cdef _compute_bounds(self):
         """Initialize core distances"""
@@ -452,11 +452,11 @@ cdef class KDTreeBoruvkaAlgorithm (object):
                     datasets.append(np.asarray(self.tree.data[i*split_cnt:]))
                 else:
                     datasets.append(np.asarray(self.tree.data[i*split_cnt:(i+1)*split_cnt]))
-            self.logger.debug(datasets)
-            self.logger.info(datasets)
-            sys.stderr.write("Datasets \n%s" % str(datasets))
-            sys.stdout.write("Datasets \n%s" % str(datasets))
-            self.logger.info(f'kdtree_boruvka  jobs={self.n_jobs}')
+            # self.logger.debug(datasets)
+            # self.logger.info(datasets)
+            # sys.stderr.write("Datasets \n%s" % str(datasets))
+            # sys.stdout.write("Datasets \n%s" % str(datasets))
+            # self.logger.info(f'kdtree_boruvka  jobs={self.n_jobs}')
             with joblib.parallel_backend('ray'):
                 knn_data = Parallel(n_jobs=self.n_jobs, max_nbytes=None, verbose=100)(
                             delayed(_core_dist_query)
