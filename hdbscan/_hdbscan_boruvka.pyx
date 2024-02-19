@@ -75,7 +75,7 @@ logger.setLevel(logging.DEBUG)
 
 # with gil:
 # print("test dziala")
-# import sys
+import sys
 # sys.stdout.write("Hello out %s!" % "")
 # sys.stderr.write("Hello err %s!" % "")
 
@@ -452,10 +452,13 @@ cdef class KDTreeBoruvkaAlgorithm (object):
                     datasets.append(np.asarray(self.tree.data[i*split_cnt:]))
                 else:
                     datasets.append(np.asarray(self.tree.data[i*split_cnt:(i+1)*split_cnt]))
-
+            self.logger.debug(datasets)
+            self.logger.info(datasets)
+            sys.stderr.write("Datasets \n%s" % str(datasets))
+            sys.stdout.write("Datasets \n%s" % str(datasets))
             self.logger.info(f'kdtree_boruvka  jobs={self.n_jobs}')
             with joblib.parallel_backend('ray'):
-                knn_data = Parallel(n_jobs=self.n_jobs, max_nbytes=None, verbose=10)(
+                knn_data = Parallel(n_jobs=self.n_jobs, max_nbytes=None, verbose=100)(
                             delayed(_core_dist_query)
                             (self.core_dist_tree, points,
                              self.min_samples + 1)
