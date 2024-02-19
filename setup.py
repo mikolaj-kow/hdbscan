@@ -51,7 +51,7 @@ def requirements():
 
 configuration = {
     'name': 'hdbscan',
-    'version': '0.8.34-rc7',
+    'version': '0.8.34-rc8',
     'description': 'Clustering based on density with variable density clusters',
     'long_description': readme(),
     'classifiers': [
