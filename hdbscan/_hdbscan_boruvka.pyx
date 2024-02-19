@@ -57,9 +57,7 @@
 # we can perform more specific optimizations here for what
 # is a simpler version of the structure.
 
-from libc.stdio cimport printf
 
-printf("%f\n", "test")
 
 
 import logging
@@ -72,15 +70,16 @@ handler.setFormatter(logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s 
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
-logger.debug("test d")
-logger.info("test d")
+# logger.debug("test d")
+# logger.info("test d")
 
 # with gil:
-print("test gil")
-import sys
+# print("test dziala")
+# import sys
+# sys.stdout.write("Hello out %s!" % "")
+# sys.stderr.write("Hello err %s!" % "")
 
-sys.stdout.write("Hello out %s!" % "")
-sys.stderr.write("Hello err %s!" % "")
+
 import numpy as np
 cimport numpy as np
 
@@ -427,6 +426,8 @@ cdef class KDTreeBoruvkaAlgorithm (object):
         self.candidate_point_ptr = <np.intp_t *> &self.candidate_point[0]
         self.core_distance_ptr = <np.double_t *> &self.core_distance[0]
         self.bounds_ptr = <np.double_t *> &self.bounds[0]
+        self.logger = logging.getLogger(__name__)
+        self.logger.info('kdtree_boruvka init jobs=', self.n_jobs)
 
     cdef _compute_bounds(self):
         """Initialize core distances"""
@@ -450,7 +451,7 @@ cdef class KDTreeBoruvkaAlgorithm (object):
                 else:
                     datasets.append(np.asarray(self.tree.data[i*split_cnt:(i+1)*split_cnt]))
 
-            logger.info('kdtree_boruvka jobs=', self.n_jobs)
+            self.logger.info('kdtree_boruvka jobs=', self.n_jobs)
             with joblib.parallel_backend('ray'):
                 knn_data = Parallel(n_jobs=self.n_jobs, max_nbytes=None, verbose=10)(
                             delayed(_core_dist_query)
