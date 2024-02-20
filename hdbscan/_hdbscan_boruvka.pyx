@@ -457,8 +457,8 @@ cdef class KDTreeBoruvkaAlgorithm (object):
             # sys.stderr.write("Datasets \n%s" % str(datasets))
             # sys.stdout.write("Datasets \n%s" % str(datasets))
             # self.logger.info(f'kdtree_boruvka  jobs={self.n_jobs}')
-            with joblib.parallel_backend('ray'):
-                knn_data = Parallel(n_jobs=self.n_jobs, max_nbytes=None, verbose=100)(
+            with joblib.parallel_backend('ray', ray_remote_args={'num_cpus':1}):
+                knn_data = Parallel(n_jobs=self.n_jobs, max_nbytes=None, verbose=10)(
                             delayed(_core_dist_query)
                             (self.core_dist_tree, points,
                              self.min_samples + 1)
