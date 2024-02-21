@@ -307,6 +307,36 @@ def density_separation(X, labels, cluster_id1, cluster_id2,
 
         return mr_dist_matrix.min()
 
+@ray.remote(num_cpus=1)
+def density_separation_ray(X, labels, cluster_id1, cluster_id2,
+                       internal_nodes1, internal_nodes2,
+                       core_distances1, core_distances2,
+                       metric='euclidean', no_coredist=False, **kwd_args):    
+    
+    X = ray.get(X)
+    if metric == 'precomputed':
+        sub_select = X[labels == cluster_id1, :][:, labels == cluster_id2]
+        distance_matrix = sub_select[internal_nodes1, :][:, internal_nodes2]
+    else:
+        cluster1 = X[labels == cluster_id1][internal_nodes1]
+        cluster2 = X[labels == cluster_id2][internal_nodes2]
+        # with joblib.parallel_backend('ray', ray_remote_args={'num_cpus':1}):
+        distance_matrix = cdist(cluster1, cluster2, metric, **kwd_args)
+
+    if no_coredist:
+        return distance_matrix.min()
+
+    else:
+        core_dist_matrix1 = np.tile(core_distances1[internal_nodes1],
+                                    (distance_matrix.shape[1], 1)).T
+        core_dist_matrix2 = np.tile(core_distances2[internal_nodes2],
+                                    (distance_matrix.shape[0], 1))
+
+        mr_dist_matrix = np.dstack([distance_matrix,
+                                    core_dist_matrix1,
+                                    core_dist_matrix2]).max(axis=-1)
+
+        return mr_dist_matrix.min()
 
 def validity_index_ray(X, labels, metric='euclidean', n_jobs=None,
                     d=None, n_samples=None, per_cluster_scores=False, mst_raw_dist=False, verbose=False,  **kwd_args):
@@ -422,7 +452,8 @@ def validity_index_ray(X, labels, metric='euclidean', n_jobs=None,
         density_sparseness[cluster_id] = mst_edges[cluster_id].T[2].max()
     t2 = time.perf_counter(), time.process_time()
     logger.info(f"DBP OK, Real time: {t2[0] - t1[0]:.2f} seconds, CPU time: {t2[1] - t1[1]:.2f} seconds")
-    
+   
+    ##########################
     t1 = time.perf_counter(), time.process_time()
     for i in range(max_cluster_id):
 
@@ -443,10 +474,39 @@ def validity_index_ray(X, labels, metric='euclidean', n_jobs=None,
                 metric=metric, no_coredist=mst_raw_dist,
                 **kwd_args
             )
+
             density_sep[j, i] = density_sep[i, j]
     t2 = time.perf_counter(), time.process_time()
     logger.info(f"DSEP OK, Real time: {t2[0] - t1[0]:.2f} seconds, CPU time: {t2[1] - t1[1]:.2f} seconds")
     
+    ###########################
+    t1 = time.perf_counter(), time.process_time()
+    for i in range(max_cluster_id):
+
+        if np.sum(labels == i) == 0:
+            continue
+
+        internal_nodes_i = mst_nodes[i]
+        for j in range(i + 1, max_cluster_id):
+
+            if np.sum(labels == j) == 0:
+                continue
+
+            internal_nodes_j = mst_nodes[j]
+            density_sep_ref[i, j] = density_separation_ray.remote(
+                X, labels, i, j,
+                internal_nodes_i, internal_nodes_j,
+                core_distances[i], core_distances[j],
+                metric=metric, no_coredist=mst_raw_dist,
+                **kwd_args
+            )
+    for i in range(max_cluster_id):
+        for j in range(i + 1, max_cluster_id):
+            density_sep[i, j] = ray.get(density_sep_ref[i, j])
+            density_sep[j, i] = density_sep[i, j]
+    t2 = time.perf_counter(), time.process_time()
+    logger.info(f"DSEP RAY OK, Real time: {t2[0] - t1[0]:.2f} seconds, CPU time: {t2[1] - t1[1]:.2f} seconds")
+    ###############################
     if n_samples is None:
         n_samples = float(ray.get(X).shape[0])
     
