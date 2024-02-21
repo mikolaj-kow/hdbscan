@@ -7,7 +7,7 @@ from .hdbscan_ import isclose
 # import joblib
 # from ray.util.joblib import register_ray
 # register_ray()
-
+import ray
 import logging
 logger = logging.getLogger("ray")
 # logger = logging.getLogger(__name__)
@@ -125,6 +125,7 @@ def distances_between_points(X, labels, cluster_id,
     Moulavi, D., Jaskowiak, P.A., Campello, R.J., Zimek, A. and Sander, J.,
     2014. Density-Based Clustering Validation. In SDM (pp. 839-847).
     """
+    X = ray.get(X)
     if metric == 'precomputed':
         if d is None:
             raise ValueError('If metric is precomputed a '
@@ -141,6 +142,7 @@ def distances_between_points(X, labels, cluster_id,
         return distance_matrix, None
 
     else:
+        # TODO ray
         core_distances = all_points_core_distance(distance_matrix.copy(), d=d)
         core_dist_matrix = np.tile(core_distances, (core_distances.shape[0], 1))
         stacked_distances = np.dstack(
@@ -279,6 +281,7 @@ def density_separation(X, labels, cluster_id1, cluster_id2,
     Moulavi, D., Jaskowiak, P.A., Campello, R.J., Zimek, A. and Sander, J.,
     2014. Density-Based Clustering Validation. In SDM (pp. 839-847).
     """
+    X = ray.get(X)
     if metric == 'precomputed':
         sub_select = X[labels == cluster_id1, :][:, labels == cluster_id2]
         distance_matrix = sub_select[internal_nodes1, :][:, internal_nodes2]
@@ -304,8 +307,8 @@ def density_separation(X, labels, cluster_id1, cluster_id2,
         return mr_dist_matrix.min()
 
 
-def validity_index(X, labels, metric='euclidean',
-                    d=None, per_cluster_scores=False, mst_raw_dist=False, verbose=False,  **kwd_args):
+def validity_index_ray(X, labels, metric='euclidean',
+                    d=None, n_samples=None, per_cluster_scores=False, mst_raw_dist=False, verbose=False,  **kwd_args):
     """
     Compute the density based cluster validity index for the
     clustering specified by `labels` and for each cluster in `labels`.
@@ -380,7 +383,8 @@ def validity_index(X, labels, metric='euclidean',
         logger.addHandler(handler)
         logger.setLevel(logging.INFO)
 
-
+    X = np.asfarray(ray.get(X), dtype=np.double)
+    labels = ray.get(labels)
     
     core_distances = {}
     density_sparseness = {}
@@ -434,7 +438,9 @@ def validity_index(X, labels, metric='euclidean',
             )
             density_sep[j, i] = density_sep[i, j]
 
-    n_samples = float(X.shape[0])
+    if n_samples is None:
+        n_samples = float(ray.get(X).shape[0])
+    
     result = 0
 
     for i in range(max_cluster_id):
