@@ -425,7 +425,8 @@ def validity_index_ray(X, labels, metric='euclidean', n_jobs=None,
     max_cluster_id = labels.max() + 1
     density_sep = np.inf * np.ones((max_cluster_id, max_cluster_id),
                                    dtype=np.float64)
-    density_sep_ref = np.empty((max_cluster_id, max_cluster_id), dtype=np.object_)
+    # density_sep_ref = np.empty((max_cluster_id, max_cluster_id), dtype=np.object_)
+    density_sep_ref = [[]]
     cluster_validity_indices = np.empty(max_cluster_id, dtype=np.float64)
     
     
@@ -468,7 +469,7 @@ def validity_index_ray(X, labels, metric='euclidean', n_jobs=None,
                 continue
 
             internal_nodes_j = mst_nodes[j]
-            density_sep_ref[i, j] = density_separation_ray.remote(
+            density_sep_ref[i][j] = density_separation_ray.remote(
                 X, labels, i, j,
                 internal_nodes_i, internal_nodes_j,
                 core_distances[i], core_distances[j],
@@ -477,7 +478,7 @@ def validity_index_ray(X, labels, metric='euclidean', n_jobs=None,
             )
     for i in range(max_cluster_id):
         for j in range(i + 1, max_cluster_id):
-            density_sep[i, j] = ray.get(density_sep_ref[i, j])
+            density_sep[i, j] = ray.get(density_sep_ref[i][j])
             density_sep[j, i] = density_sep[i, j]
     t2 = time.perf_counter(), time.process_time()
     logger.info(f"DSEP RAY OK, Real time: {t2[0] - t1[0]:.2f} seconds, CPU time: {t2[1] - t1[1]:.2f} seconds")
