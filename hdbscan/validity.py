@@ -4,6 +4,7 @@ from scipy.spatial.distance import cdist
 from ._hdbscan_linkage import mst_linkage_core
 from .hdbscan_ import isclose
 
+import time
 # import joblib
 # from ray.util.joblib import register_ray
 # register_ray()
