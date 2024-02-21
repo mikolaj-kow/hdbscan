@@ -384,7 +384,7 @@ def validity_index_ray(X, labels, metric='euclidean',
         logger.setLevel(logging.INFO)
 
     X = np.asfarray(ray.get(X), dtype=np.double)
-    labels = ray.get(labels)
+    # labels = ray.get(labels)
     
     core_distances = {}
     density_sparseness = {}
