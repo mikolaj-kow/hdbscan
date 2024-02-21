@@ -425,7 +425,7 @@ def validity_index_ray(X, labels, metric='euclidean', n_jobs=None,
     max_cluster_id = labels.max() + 1
     density_sep = np.inf * np.ones((max_cluster_id, max_cluster_id),
                                    dtype=np.float64)
-    density_sep = np.empty(max_cluster_id, max_cluster_id, dtype=np.object)
+    density_sep = np.empty(max_cluster_id, max_cluster_id, dtype=np.object_)
     cluster_validity_indices = np.empty(max_cluster_id, dtype=np.float64)
     
     
