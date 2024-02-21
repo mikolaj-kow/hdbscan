@@ -5,9 +5,9 @@ from ._hdbscan_linkage import mst_linkage_core
 from .hdbscan_ import isclose
 
 import time
-# import joblib
-# from ray.util.joblib import register_ray
-# register_ray()
+import joblib
+from ray.util.joblib import register_ray
+register_ray()
 import ray
 import logging
 logger = logging.getLogger("ray")
@@ -289,8 +289,8 @@ def density_separation(X, labels, cluster_id1, cluster_id2,
     else:
         cluster1 = X[labels == cluster_id1][internal_nodes1]
         cluster2 = X[labels == cluster_id2][internal_nodes2]
-        # with joblib.parallel_backend('ray'):
-        distance_matrix = cdist(cluster1, cluster2, metric, **kwd_args)
+        with joblib.parallel_backend('ray', ray_remote_args={'num_cpus':1}):
+            distance_matrix = cdist(cluster1, cluster2, metric, **kwd_args)
 
     if no_coredist:
         return distance_matrix.min()
