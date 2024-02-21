@@ -307,7 +307,7 @@ def density_separation(X, labels, cluster_id1, cluster_id2,
         return mr_dist_matrix.min()
 
 
-def validity_index_ray(X, labels, metric='euclidean',
+def validity_index_ray(X, labels, metric='euclidean', n_jobs=None,
                     d=None, n_samples=None, per_cluster_scores=False, mst_raw_dist=False, verbose=False,  **kwd_args):
     """
     Compute the density based cluster validity index for the
@@ -395,6 +395,9 @@ def validity_index_ray(X, labels, metric='euclidean',
     density_sep = np.inf * np.ones((max_cluster_id, max_cluster_id),
                                    dtype=np.float64)
     cluster_validity_indices = np.empty(max_cluster_id, dtype=np.float64)
+    
+    
+    t1 = time.perf_counter(), time.process_time()
 
     for cluster_id in range(max_cluster_id):
 
@@ -416,7 +419,10 @@ def validity_index_ray(X, labels, metric='euclidean',
         mst_nodes[cluster_id], mst_edges[cluster_id] = \
             internal_minimum_spanning_tree(distances_for_mst)
         density_sparseness[cluster_id] = mst_edges[cluster_id].T[2].max()
-
+    t2 = time.perf_counter(), time.process_time()
+    logger.info(f"DBP OK, Real time: {t2[0] - t1[0]:.2f} seconds, CPU time: {t2[1] - t1[1]:.2f} seconds")
+    
+    t1 = time.perf_counter(), time.process_time()
     for i in range(max_cluster_id):
 
         if np.sum(labels == i) == 0:
@@ -437,12 +443,14 @@ def validity_index_ray(X, labels, metric='euclidean',
                 **kwd_args
             )
             density_sep[j, i] = density_sep[i, j]
-
+    t2 = time.perf_counter(), time.process_time()
+    logger.info(f"DSEP OK, Real time: {t2[0] - t1[0]:.2f} seconds, CPU time: {t2[1] - t1[1]:.2f} seconds")
+    
     if n_samples is None:
         n_samples = float(ray.get(X).shape[0])
     
     result = 0
-
+    t1 = time.perf_counter(), time.process_time()
     for i in range(max_cluster_id):
 
         if np.sum(labels == i) == 0:
@@ -460,7 +468,9 @@ def validity_index_ray(X, labels, metric='euclidean',
 
         cluster_size = np.sum(labels == i)
         result += (cluster_size / n_samples) * cluster_validity_indices[i]
-
+    t2 = time.perf_counter(), time.process_time()
+    logger.info(f"CVI OK, Real time: {t2[0] - t1[0]:.2f} seconds, CPU time: {t2[1] - t1[1]:.2f} seconds")
+    
     if per_cluster_scores:
         return result, cluster_validity_indices
     else:
