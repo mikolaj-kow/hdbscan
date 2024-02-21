@@ -383,7 +383,7 @@ def validity_index_ray(X, labels, metric='euclidean',
         logger.addHandler(handler)
         logger.setLevel(logging.INFO)
 
-    X = np.asfarray(ray.get(X), dtype=np.double)
+    # X = np.asfarray(ray.get(X), dtype=np.double)
     # labels = ray.get(labels)
     
     core_distances = {}
