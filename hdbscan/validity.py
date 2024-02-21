@@ -5,9 +5,9 @@ from ._hdbscan_linkage import mst_linkage_core
 from .hdbscan_ import isclose
 
 import time
-import joblib
-from ray.util.joblib import register_ray
-register_ray()
+# import joblib
+# from ray.util.joblib import register_ray
+# register_ray()
 import ray
 import logging
 logger = logging.getLogger("ray")
@@ -289,8 +289,8 @@ def density_separation(X, labels, cluster_id1, cluster_id2,
     else:
         cluster1 = X[labels == cluster_id1][internal_nodes1]
         cluster2 = X[labels == cluster_id2][internal_nodes2]
-        with joblib.parallel_backend('ray', ray_remote_args={'num_cpus':1}):
-            distance_matrix = cdist(cluster1, cluster2, metric, **kwd_args)
+        # with joblib.parallel_backend('ray', ray_remote_args={'num_cpus':1}):
+        distance_matrix = cdist(cluster1, cluster2, metric, **kwd_args)
 
     if no_coredist:
         return distance_matrix.min()
@@ -425,6 +425,7 @@ def validity_index_ray(X, labels, metric='euclidean', n_jobs=None,
     max_cluster_id = labels.max() + 1
     density_sep = np.inf * np.ones((max_cluster_id, max_cluster_id),
                                    dtype=np.float64)
+    density_sep = np.empty(max_cluster_id, max_cluster_id, dtype=np.object)
     cluster_validity_indices = np.empty(max_cluster_id, dtype=np.float64)
     
     
@@ -467,32 +468,6 @@ def validity_index_ray(X, labels, metric='euclidean', n_jobs=None,
                 continue
 
             internal_nodes_j = mst_nodes[j]
-            density_sep[i, j] = density_separation(
-                X, labels, i, j,
-                internal_nodes_i, internal_nodes_j,
-                core_distances[i], core_distances[j],
-                metric=metric, no_coredist=mst_raw_dist,
-                **kwd_args
-            )
-
-            density_sep[j, i] = density_sep[i, j]
-    t2 = time.perf_counter(), time.process_time()
-    logger.info(f"DSEP OK, Real time: {t2[0] - t1[0]:.2f} seconds, CPU time: {t2[1] - t1[1]:.2f} seconds")
-    
-    ###########################
-    t1 = time.perf_counter(), time.process_time()
-    for i in range(max_cluster_id):
-
-        if np.sum(labels == i) == 0:
-            continue
-
-        internal_nodes_i = mst_nodes[i]
-        for j in range(i + 1, max_cluster_id):
-
-            if np.sum(labels == j) == 0:
-                continue
-
-            internal_nodes_j = mst_nodes[j]
             density_sep_ref[i, j] = density_separation_ray.remote(
                 X, labels, i, j,
                 internal_nodes_i, internal_nodes_j,
@@ -507,6 +482,34 @@ def validity_index_ray(X, labels, metric='euclidean', n_jobs=None,
     t2 = time.perf_counter(), time.process_time()
     logger.info(f"DSEP RAY OK, Real time: {t2[0] - t1[0]:.2f} seconds, CPU time: {t2[1] - t1[1]:.2f} seconds")
     ###############################
+    
+    t1 = time.perf_counter(), time.process_time()
+    for i in range(max_cluster_id):
+
+        if np.sum(labels == i) == 0:
+            continue
+
+        internal_nodes_i = mst_nodes[i]
+        for j in range(i + 1, max_cluster_id):
+
+            if np.sum(labels == j) == 0:
+                continue
+
+            internal_nodes_j = mst_nodes[j]
+            density_sep[i, j] = density_separation(
+                X, labels, i, j,
+                internal_nodes_i, internal_nodes_j,
+                core_distances[i], core_distances[j],
+                metric=metric, no_coredist=mst_raw_dist,
+                **kwd_args
+            )
+
+            density_sep[j, i] = density_sep[i, j]
+    t2 = time.perf_counter(), time.process_time()
+    logger.info(f"DSEP OK, Real time: {t2[0] - t1[0]:.2f} seconds, CPU time: {t2[1] - t1[1]:.2f} seconds")
+    
+    ###########################
+
     if n_samples is None:
         n_samples = float(ray.get(X).shape[0])
     
